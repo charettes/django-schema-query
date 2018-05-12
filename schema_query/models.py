@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from functools import partial
-
 from django.db import models, router
 
 from .deletion import Collector
@@ -36,7 +34,6 @@ class SchemaModel(models.Model):
     def delete(self, using=None, keep_parents=False):
         table_schemas = getattr(self._state, 'table_schemas', None)
         assert table_schemas
-        delete_collector_class = partial(Collector, table_schemas=table_schemas)
 
         # Obligatory copy-pasta from Model.delete() because the latter doesn't
         # allow specifying a custom deletion collector class.
@@ -46,6 +43,6 @@ class SchemaModel(models.Model):
             (self._meta.object_name, self._meta.pk.attname)
         )
 
-        collector = delete_collector_class(using=using)
+        collector = Collector(table_schemas=table_schemas, using=using)
         collector.collect([self], keep_parents=keep_parents)
         return collector.delete()
